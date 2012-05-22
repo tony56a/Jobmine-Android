@@ -31,6 +31,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnDismissListener;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -44,11 +45,11 @@ import android.widget.SearchView;
 import android.widget.TextView;
 
 
-public class AbababaActivity extends SherlockActivity {
+public class MainActivity extends SherlockActivity {
 	/** Called when the activity is first created. */
-	public static String userName = "xgdu";
-	public static String pwd = "A1a2a3a4!";
-
+	public static String userName = "";
+	public static String pwd = "";
+    public static final String PREFS_NAME = "MyPrefsFile";
 	ListView mListView;
 
 	ArrayList<String> title, id, emplyer, job, jobStatus, appStatus, resumes;
@@ -221,7 +222,7 @@ public class AbababaActivity extends SherlockActivity {
 		jobStatus = new ArrayList<String>();
 		appStatus = new ArrayList<String>();
 		resumes = new ArrayList<String>();
-
+		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 	}
 
 	private void createDialog() {
@@ -249,7 +250,7 @@ public class AbababaActivity extends SherlockActivity {
 								userName = usernameFieldContent;
 								pwd = passwordFieldContent;
 
-								new getData(AbababaActivity.this).execute(new Void[3]);
+								new getData(MainActivity.this).execute(new Void[3]);
 							}
 						})
 				// otherwise,just cancel the dialog
