@@ -3,16 +3,28 @@ package com.someguy.jobmine;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpVersion;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.CoreProtocolPNames;
+import org.apache.http.params.HttpParams;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -29,15 +41,21 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.DialogInterface.OnCancelListener;
+import android.content.DialogInterface.OnClickListener;
 import android.content.DialogInterface.OnDismissListener;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.View.OnTouchListener;
 
 import android.view.View;
 
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -49,11 +67,27 @@ public class MainActivity extends SherlockActivity {
 	/** Called when the activity is first created. */
 	public static String userName = "";
 	public static String pwd = "";
-    public static final String PREFS_NAME = "MyPrefsFile";
 	ListView mListView;
-
+	boolean displayApplied,displaySelected,displayNotSelected;
 	ArrayList<String> title, id, emplyer, job, jobStatus, appStatus, resumes;
-
+	SharedPreferences settings;
+	Editor editor;
+	
+    public static final String PREFS_NAME = "MyPrefsFile";
+    public static final String appliedBoolean ="displayApplied";
+    public static final String selectedBoolean = "displaySelected";
+    public static final String notSelectedBoolean = "displayNotSelected";
+    public static final String userNameKey ="USERNAMEKEY";
+    public static final String pwdKey = "PWDKEY";
+	public static final String idKey = "idkey";
+	public static final String titleKey = "titlekey";
+	public static final String employerKey = "employerkey";
+	public static final String jobStatusKey = "jobstatuskey";
+	public static final String appStatusKey = "appstatuskey";
+	public static final String resumeKey = "resumekey";
+    
+    byte[] key;
+    
 	public void getJobmine() {
 
 		title = new ArrayList<String>();
@@ -75,7 +109,7 @@ public class MainActivity extends SherlockActivity {
 		try {
 			HttpResponse resp = client.execute(post);
 			ByteArrayOutputStream stream = new ByteArrayOutputStream();
-			resp.getEntity().writeTo(stream);
+			resp.getEntity().consumeContent();
 
 			post = new HttpPost(
 					"https://jobmine.ccol.uwaterloo.ca/psc/SS/EMPLOYEE/WORK/c/UW_CO_STUDENTS.UW_CO_APP_SUMMARY.GBL?pslnkid=UW_CO_APP_SUMMARY_LINK&FolderPath=PORTAL_ROOT_OBJECT.UW_CO_APP_SUMMARY_LINK&IsFolder=false&IgnoreParamTempl=FolderPath%2cIsFolder&PortalActualURL=https%3a%2f%2fjobmine.ccol.uwaterloo.ca%2fpsc%2fSS%2fEMPLOYEE%2fWORK%2fc%2fUW_CO_STUDENTS.UW_CO_APP_SUMMARY.GBL%3fpslnkid%3dUW_CO_APP_SUMMARY_LINK&PortalContentURL=https%3a%2f%2fjobmine.ccol.uwaterloo.ca%2fpsc%2fSS%2fEMPLOYEE%2fWORK%2fc%2fUW_CO_STUDENTS.UW_CO_APP_SUMMARY.GBL%3fpslnkid%3dUW_CO_APP_SUMMARY_LINK&PortalContentProvider=WORK&PortalCRefLabel=Applications&PortalRegistryName=EMPLOYEE&PortalServletURI=https%3a%2f%2fjobmine.ccol.uwaterloo.ca%2fpsp%2fSS%2f&PortalURI=https%3a%2f%2fjobmine.ccol.uwaterloo.ca%2fpsc%2fSS%2f&PortalHostNode=WORK&NoCrumbs=yes&PortalKeyStruct=yes");// ?ICType=Panel&Menu=UW_CO_STUDENTS&Market=GBL&PanelGroupName=UW_CO_APP_SUMMARY&RL=&target=main0&navc=5170");
@@ -177,12 +211,11 @@ public class MainActivity extends SherlockActivity {
 		LinearLayout list = (LinearLayout) findViewById(R.id.linearlayout1);
 		LayoutInflater li = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
 		list.removeAllViews();
-		for (int i = 0; i < resumes.size(); i++) {
-			if (!title.get(i).equals("")) {
+		for ( int i = 0; i < resumes.size(); i++) {
+			if (!title.get(i).equals("") ) {
+				final int position = i;
 				View v = li.inflate(R.layout.jobentry, null);
-				if((i/2)%2 == 0){
-					v.setBackgroundResource(R.color.grey);
-				}
+				
 				TextView jobTitle = (TextView) v.findViewById(R.id.textView1);
 				TextView jobEmployer = (TextView) v
 						.findViewById(R.id.textView5);
@@ -193,18 +226,37 @@ public class MainActivity extends SherlockActivity {
 				TextView resumesText = (TextView) v
 						.findViewById(R.id.textView4);
 
-				jobTitle.setText(title.get(i));
-				jobEmployer.setText(emplyer.get(i));
-				jobStatusText.setText(jobStatus.get(i));
-				appStatusText.setText(appStatus.get(i));
-				if (appStatus.get(i).contains("Not Selected")) {
+				jobTitle.setText(title.get(position));
+				jobEmployer.setText(emplyer.get(position));
+				jobStatusText.setText(jobStatus.get(position));
+				appStatusText.setText(appStatus.get(position));
+				if (appStatus.get(position).contains("Not Selected")) {
 					appStatusText.setBackgroundResource(R.color.red);
-				} else if (appStatus.get(i).contains("Selected")) {
+				} else if (appStatus.get(position).contains("Selected")) {
 					appStatusText.setBackgroundResource(R.color.green);
 				}
-				resumesText.setText(resumes.get(i) + " Applicants");
-			
-				list.addView(v);
+				resumesText.setText(resumes.get(position) + " Applicants");
+				v.setOnTouchListener(new OnTouchListener() {
+
+					@Override
+					public boolean onTouch(View v, MotionEvent event) {
+						if(event.getAction() == MotionEvent.ACTION_UP){
+							Intent intent = new Intent(MainActivity.this, JobDetails.class);
+							intent.putExtra(titleKey, title.get(position));
+							intent.putExtra(idKey, id.get(position));
+							intent.putExtra(employerKey, emplyer.get(position));
+							intent.putExtra(jobStatusKey, jobStatus.get(position));
+							intent.putExtra(appStatusKey, appStatus.get(position));
+							intent.putExtra(resumeKey, resumes.get(position));
+							startActivity(intent);
+						}
+						return true;
+					}
+				});
+				
+				if((displayApplied && appStatus.get(i).contains("Applied") || (displaySelected && appStatus.get(i).contains("Selected") && !appStatus.get(i).contains("Not")) || (displayNotSelected && appStatus.get(i).contains("Not Selected") ))){
+					list.addView(v);
+				}
 			}
 		}
 	}
@@ -214,7 +266,11 @@ public class MainActivity extends SherlockActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 		
-		 getSupportActionBar().setDisplayShowTitleEnabled(false);
+		getSupportActionBar().setDisplayShowHomeEnabled(false);
+		getSupportActionBar().setDisplayShowTitleEnabled(true);
+		settings = new EncryptedSharedPreferences( 
+			    this, this.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) );
+		editor = settings.edit();
 		title = new ArrayList<String>();
 		id = new ArrayList<String>();
 		emplyer = new ArrayList<String>();
@@ -222,8 +278,12 @@ public class MainActivity extends SherlockActivity {
 		jobStatus = new ArrayList<String>();
 		appStatus = new ArrayList<String>();
 		resumes = new ArrayList<String>();
-		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+		displayApplied =settings.getBoolean(appliedBoolean, true);
+		displaySelected = settings.getBoolean(selectedBoolean, true);
+		displayNotSelected = settings.getBoolean(notSelectedBoolean, true);
+		
 	}
+
 
 	private void createDialog() {
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -249,7 +309,14 @@ public class MainActivity extends SherlockActivity {
 
 								userName = usernameFieldContent;
 								pwd = passwordFieldContent;
-
+								try {
+									editor.putString(userNameKey, userName);
+									editor.putString(pwdKey,pwd);
+									editor.commit();
+								} catch (Exception e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
 								new getData(MainActivity.this).execute(new Void[3]);
 							}
 						})
@@ -277,7 +344,19 @@ public class MainActivity extends SherlockActivity {
 		if (title.size() > 0) {
 			setContent();
 		} else {
-			createDialog();
+			if(settings.contains(userNameKey) && settings.contains(pwdKey)){
+				try {
+					userName = settings.getString(userNameKey, "");
+					pwd = settings.getString(pwdKey, "");
+					new getData(MainActivity.this).execute(new Void[3]);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			else{
+				createDialog();
+			}
 		}
 	}
 
@@ -291,11 +370,51 @@ public class MainActivity extends SherlockActivity {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 	    switch (item.getItemId()) {
-	        case R.id.refresh:
-	        	new getData(this).execute(new Void[3]);
-	        default:
-	            return super.onOptionsItemSelected(item);
+
+	    case R.id.refresh:
+	    	new getData(this).execute(new Void[3]);
+	    	break;
+	    case R.id.filter:
+	    	AlertDialog.Builder builder = new AlertDialog.Builder(this);
+	    	LayoutInflater vi = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+	    	final View layout = vi.inflate(R.layout.filter_dialog, null);
+	    	builder.setView(layout);
+	    	final CheckBox appliedCheckBox = (CheckBox)layout.findViewById(R.id.checkBox1);
+	    	final CheckBox selectedCheckBox = (CheckBox)layout.findViewById(R.id.checkBox2);
+	    	final CheckBox notSelectedCheckBox = (CheckBox)layout.findViewById(R.id.checkBox4);
+	    	appliedCheckBox.setChecked(displayApplied);
+	    	selectedCheckBox.setChecked(displaySelected);
+	    	notSelectedCheckBox.setChecked(displayNotSelected);
+	    	builder.setMessage("Select application type to display:");
+	    	builder.setPositiveButton("OK", new OnClickListener() {
+	    		@Override
+	    		public void onClick(DialogInterface dialog, int which) {
+	    			displayApplied = appliedCheckBox.isChecked();
+	    			displaySelected = selectedCheckBox.isChecked();
+	    			displayNotSelected = notSelectedCheckBox.isChecked();
+	    			editor.putBoolean(appliedBoolean, displayApplied);
+	    			editor.putBoolean(selectedBoolean, displaySelected);
+	    			editor.putBoolean(notSelectedBoolean, displayNotSelected);
+	    			editor.commit();
+	    			setContent();
+	    		}
+	    	});
+	    	builder.show();
+	    	break;
+	    case R.id.logout:
+	    	editor.remove(userNameKey);
+	    	editor.remove(pwdKey);
+	    	editor.commit();
+	    	LinearLayout linearLayout1 = (LinearLayout)findViewById(R.id.linearlayout1);
+	    	linearLayout1.removeAllViews();
+	    	createDialog();
+	    	break;
+	    default:
+	    	break;
+	            
 	    }
+	    return super.onOptionsItemSelected(item);
 	}
+	
 	
 }
