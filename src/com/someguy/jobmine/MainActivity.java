@@ -55,6 +55,8 @@ import android.view.View.OnTouchListener;
 
 import android.view.View;
 
+import android.webkit.CookieManager;
+import android.webkit.WebView;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -86,9 +88,6 @@ public class MainActivity extends SherlockActivity {
 	public static final String jobStatusKey = "jobstatuskey";
 	public static final String appStatusKey = "appstatuskey";
 	public static final String resumeKey = "resumekey";
-	
-    
-    byte[] key;
     
 	public void getJobmine() {
 
@@ -102,7 +101,8 @@ public class MainActivity extends SherlockActivity {
 		
 		DefaultHttpClient client = new DefaultHttpClient();
 		List<Cookie> a = client.getCookieStore().getCookies();
-
+		
+		
 		HttpPost post = new HttpPost(
 				"https://jobmine.ccol.uwaterloo.ca/psp/SS/?cmd=login&"
 						+ "userid=" + userName + "&" + "pwd=" + pwd + "&" +
@@ -119,7 +119,7 @@ public class MainActivity extends SherlockActivity {
 			stream = new ByteArrayOutputStream();
 			resp.getEntity().writeTo(stream);
 			Document table = Jsoup.parse(new String(stream.toByteArray()));
-
+		
 			post = new HttpPost(
 					"https://jobmine.ccol.uwaterloo.ca/psp/SS/EMPLOYEE/WORK/?cmd=logout");
 			client.execute(post);
@@ -245,6 +245,11 @@ public class MainActivity extends SherlockActivity {
 				} else if (appStatus.get(position).contains("Alternate")){
 					appStatusText.setBackgroundColor(R.color.amber);
 				}
+				if (jobStatus.get(position).contains("Cancelled")){
+					jobStatusText.setBackgroundColor(R.color.red);
+				} else if(jobStatus.get(position).contains("Ranking Completed") || jobStatus.get(position).contains("Offer")){
+					jobStatusText.setBackgroundColor(R.color.green);
+				}
 				resumesText.setText(resumes.get(position) + " Applicants");
 				v.setOnTouchListener(new OnTouchListener() {
 
@@ -269,6 +274,7 @@ public class MainActivity extends SherlockActivity {
 						(displaySelected && appStatus.get(position).contains("Alternate")) ||
 						(displaySelected && appStatus.get(position).contains("Scheduled")) ||
 						(displayNotSelected && appStatus.get(position).contains("Not Selected") ||
+						(displayNotSelected && jobStatus.get(position).contains("Cancelled")) || 
 						(displayRanked && jobStatus.get(position).contains("Ranking Completed"))))){
 					list.addView(v);
 				}
