@@ -240,8 +240,10 @@ public class MainActivity extends SherlockActivity {
 				appStatusText.setText(appStatus.get(position));
 				if (appStatus.get(position).contains("Not Selected")) {
 					appStatusText.setBackgroundResource(R.color.red);
-				} else if (appStatus.get(position).contains("Selected")) {
+				} else if (appStatus.get(position).contains("Selected") || appStatus.get(position).contains("Scheduled")) {
 					appStatusText.setBackgroundResource(R.color.green);
+				} else if (appStatus.get(position).contains("Alternate")){
+					appStatusText.setBackgroundColor(R.color.amber);
 				}
 				resumesText.setText(resumes.get(position) + " Applicants");
 				v.setOnTouchListener(new OnTouchListener() {
@@ -265,6 +267,7 @@ public class MainActivity extends SherlockActivity {
 				if((displayApplied && appStatus.get(position).contains("Applied") ||
 						(displaySelected && appStatus.get(position).contains("Selected") && !appStatus.get(position).contains("Not")) ||
 						(displaySelected && appStatus.get(position).contains("Alternate")) ||
+						(displaySelected && appStatus.get(position).contains("Scheduled")) ||
 						(displayNotSelected && appStatus.get(position).contains("Not Selected") ||
 						(displayRanked && jobStatus.get(position).contains("Ranking Completed"))))){
 					list.addView(v);

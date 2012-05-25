@@ -26,6 +26,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Html;
 import android.text.Spanned;
+import android.text.util.Linkify;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.TextView;
@@ -88,6 +89,7 @@ public class JobDetails extends SherlockActivity {
 		protected void onPostExecute(Void param) {
 			dialog.dismiss();
 			descriptionView.setText(descriptionText);
+			Linkify.addLinks(descriptionView, Linkify.WEB_URLS);
 		}
 
 	}
