@@ -68,15 +68,16 @@ public class MainActivity extends SherlockActivity {
 	public static String userName = "";
 	public static String pwd = "";
 	ListView mListView;
-	boolean displayApplied,displaySelected,displayNotSelected;
+	boolean displayApplied,displaySelected,displayNotSelected,displayRanked;
 	ArrayList<String> title, id, emplyer, job, jobStatus, appStatus, resumes;
 	SharedPreferences settings;
 	Editor editor;
 	
     public static final String PREFS_NAME = "MyPrefsFile";
-    public static final String appliedBoolean ="displayApplied";
-    public static final String selectedBoolean = "displaySelected";
-    public static final String notSelectedBoolean = "displayNotSelected";
+    public static final String appliedKey ="displayApplied";
+    public static final String selectedKey = "displaySelected";
+    public static final String notSelectedKey = "displayNotSelected";
+    public static final String rankedKey = "displayRanked";
     public static final String userNameKey ="USERNAMEKEY";
     public static final String pwdKey = "PWDKEY";
 	public static final String idKey = "idkey";
@@ -85,6 +86,7 @@ public class MainActivity extends SherlockActivity {
 	public static final String jobStatusKey = "jobstatuskey";
 	public static final String appStatusKey = "appstatuskey";
 	public static final String resumeKey = "resumekey";
+	
     
     byte[] key;
     
@@ -145,6 +147,10 @@ public class MainActivity extends SherlockActivity {
 				if (c.get(i).id().contains("UW_CO_JOBSTATVW_UW_CO_JOB_STATUS")
 						&& (c.get(i).id().contains("$$")) && c.get(i).hasText()) {
 					jobStatus.add(c.get(i).ownText());
+					if(c.get(i).ownText().contains("Ranking Completed")){
+						appStatus.add(" ");
+						appStatus.add(" ");
+					}
 				}
 				if (c.get(i).id().contains("UW_CO_APPSTATVW_UW_CO_APPL_STATUS")
 						&& (c.get(i).id().contains("$$")) && c.get(i).hasText()) {
@@ -154,7 +160,8 @@ public class MainActivity extends SherlockActivity {
 						&& (c.get(i).id().contains("$$")) && c.get(i).hasText()) {
 					resumes.add(c.get(i).ownText());
 				}
-
+				
+				
 			}
 
 		} catch (Exception e) {
@@ -179,7 +186,7 @@ public class MainActivity extends SherlockActivity {
 		@Override
 		protected void onPreExecute() {
 			dialog = ProgressDialog
-					.show(activity, "", "Loading...", true, false);
+					.show(activity, "", "Loading...", true, true);
 			dialog.setOnDismissListener(new OnDismissListener() {
 				@Override
 				public void onDismiss(DialogInterface dialog) {
@@ -214,6 +221,7 @@ public class MainActivity extends SherlockActivity {
 		for ( int i = 0; i < resumes.size(); i++) {
 			if (!title.get(i).equals("") ) {
 				final int position = i;
+			
 				View v = li.inflate(R.layout.jobentry, null);
 				
 				TextView jobTitle = (TextView) v.findViewById(R.id.textView1);
@@ -254,7 +262,11 @@ public class MainActivity extends SherlockActivity {
 					}
 				});
 				
-				if((displayApplied && appStatus.get(i).contains("Applied") || (displaySelected && appStatus.get(i).contains("Selected") && !appStatus.get(i).contains("Not")) || (displayNotSelected && appStatus.get(i).contains("Not Selected") ))){
+				if((displayApplied && appStatus.get(position).contains("Applied") ||
+						(displaySelected && appStatus.get(position).contains("Selected") && !appStatus.get(position).contains("Not")) ||
+						(displaySelected && appStatus.get(position).contains("Alternate")) ||
+						(displayNotSelected && appStatus.get(position).contains("Not Selected") ||
+						(displayRanked && jobStatus.get(position).contains("Ranking Completed"))))){
 					list.addView(v);
 				}
 			}
@@ -278,9 +290,10 @@ public class MainActivity extends SherlockActivity {
 		jobStatus = new ArrayList<String>();
 		appStatus = new ArrayList<String>();
 		resumes = new ArrayList<String>();
-		displayApplied =settings.getBoolean(appliedBoolean, true);
-		displaySelected = settings.getBoolean(selectedBoolean, true);
-		displayNotSelected = settings.getBoolean(notSelectedBoolean, true);
+		displayApplied =settings.getBoolean(appliedKey, true);
+		displaySelected = settings.getBoolean(selectedKey, true);
+		displayNotSelected = settings.getBoolean(notSelectedKey, true);
+		displayRanked = settings.getBoolean(rankedKey, true);
 		
 	}
 
@@ -379,22 +392,27 @@ public class MainActivity extends SherlockActivity {
 	    	LayoutInflater vi = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 	    	final View layout = vi.inflate(R.layout.filter_dialog, null);
 	    	builder.setView(layout);
-	    	final CheckBox appliedCheckBox = (CheckBox)layout.findViewById(R.id.checkBox1);
-	    	final CheckBox selectedCheckBox = (CheckBox)layout.findViewById(R.id.checkBox2);
-	    	final CheckBox notSelectedCheckBox = (CheckBox)layout.findViewById(R.id.checkBox4);
-	    	appliedCheckBox.setChecked(displayApplied);
-	    	selectedCheckBox.setChecked(displaySelected);
-	    	notSelectedCheckBox.setChecked(displayNotSelected);
+	    	final CheckBox applCheckBox = (CheckBox)layout.findViewById(R.id.checkBox1);
+	    	final CheckBox selCheckBox = (CheckBox)layout.findViewById(R.id.checkBox2);
+	    	final CheckBox notSelCheckBox = (CheckBox)layout.findViewById(R.id.checkBox4);
+	    	final CheckBox rankCmpltCheckBox = (CheckBox)layout.findViewById(R.id.checkBox3);
+	    	
+	    	rankCmpltCheckBox.setChecked(displayRanked);
+	    	applCheckBox.setChecked(displayApplied);
+	    	selCheckBox.setChecked(displaySelected);
+	    	notSelCheckBox.setChecked(displayNotSelected);
 	    	builder.setMessage("Select application type to display:");
 	    	builder.setPositiveButton("OK", new OnClickListener() {
 	    		@Override
 	    		public void onClick(DialogInterface dialog, int which) {
-	    			displayApplied = appliedCheckBox.isChecked();
-	    			displaySelected = selectedCheckBox.isChecked();
-	    			displayNotSelected = notSelectedCheckBox.isChecked();
-	    			editor.putBoolean(appliedBoolean, displayApplied);
-	    			editor.putBoolean(selectedBoolean, displaySelected);
-	    			editor.putBoolean(notSelectedBoolean, displayNotSelected);
+	    			displayApplied = applCheckBox.isChecked();
+	    			displaySelected = selCheckBox.isChecked();
+	    			displayNotSelected = notSelCheckBox.isChecked();
+	    			displayRanked = rankCmpltCheckBox.isChecked();
+	    			editor.putBoolean(appliedKey, displayApplied);
+	    			editor.putBoolean(selectedKey, displaySelected);
+	    			editor.putBoolean(notSelectedKey, displayNotSelected);
+	    			editor.putBoolean(rankedKey, displayRanked);
 	    			editor.commit();
 	    			setContent();
 	    		}

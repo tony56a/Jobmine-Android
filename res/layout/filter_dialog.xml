@@ -24,5 +24,12 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:text="Not Selected" />
+
+    <CheckBox
+        android:id="@+id/checkBox3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="Ranking Completed" />
 
 </LinearLayout>
