@@ -63,6 +63,7 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.SearchView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
 public class MainActivity extends SherlockActivity {
@@ -89,7 +90,7 @@ public class MainActivity extends SherlockActivity {
 	public static final String appStatusKey = "appstatuskey";
 	public static final String resumeKey = "resumekey";
     
-	public void getJobmine() {
+	public boolean getJobmine() {
 
 		title = new ArrayList<String>();
 		id = new ArrayList<String>();
@@ -124,6 +125,9 @@ public class MainActivity extends SherlockActivity {
 					"https://jobmine.ccol.uwaterloo.ca/psp/SS/EMPLOYEE/WORK/?cmd=logout");
 			client.execute(post);
 			Elements element = table.getElementsByTag("table");
+			if(element.size()<6){
+				return false;
+			}
 			Element b = element.get(5);
 			Elements c = b.getAllElements();
 			for (int i = 0; i < c.size(); i++) {
@@ -168,10 +172,10 @@ public class MainActivity extends SherlockActivity {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
+			return true;
 	}
 
-	public class getData extends AsyncTask<Void, Void, Void> {
+	public class getData extends AsyncTask<Void, Void, Boolean> {
 
 		ProgressDialog dialog;
 		private getData selfReference;
@@ -199,16 +203,19 @@ public class MainActivity extends SherlockActivity {
 		}
 
 		@Override
-		protected Void doInBackground(Void... arg0) {
-			getJobmine();
-			return null;
+		protected Boolean doInBackground(Void... arg0) {
+			return getJobmine();
 		}
 
 		@Override
-		protected void onPostExecute(Void param) {
+		protected void onPostExecute(Boolean param) {
 			dialog.dismiss();
-
-			setContent();
+			if(param){
+				setContent();
+			}
+			else{
+				Toast.makeText(MainActivity.this, "Login Failed.", Toast.LENGTH_SHORT).show();
+			}
 
 		}
 
