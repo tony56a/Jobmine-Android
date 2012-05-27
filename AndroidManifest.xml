@@ -27,6 +27,9 @@
         <activity android:name="JobDetails" 
             	  android:theme="@style/Theme.Sherlock.NoActionBar"
             	  android:screenOrientation="portrait"></activity>
+        <activity android:name="InterviewList" 
+            	  android:theme="@style/Theme.Sherlock"
+            	  android:screenOrientation="portrait"></activity>
     </application>
 
 </manifest>

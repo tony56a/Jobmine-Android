@@ -68,8 +68,9 @@ import android.widget.Toast;
 
 public class MainActivity extends SherlockActivity {
 	/** Called when the activity is first created. */
-	public static String userName = "";
-	public static String pwd = "";
+	private static String userName = "";
+	private static String pwd = "";
+	private static String userIDvalue = "";
 	ListView mListView;
 	boolean displayApplied,displaySelected,displayNotSelected,displayRanked;
 	ArrayList<String> title, id, emplyer, job, jobStatus, appStatus, resumes;
@@ -83,12 +84,13 @@ public class MainActivity extends SherlockActivity {
     public static final String rankedKey = "displayRanked";
     public static final String userNameKey ="USERNAMEKEY";
     public static final String pwdKey = "PWDKEY";
-	public static final String idKey = "idkey";
-	public static final String titleKey = "titlekey";
-	public static final String employerKey = "employerkey";
-	public static final String jobStatusKey = "jobstatuskey";
-	public static final String appStatusKey = "appstatuskey";
-	public static final String resumeKey = "resumekey";
+	public static final String userIdKey = "idkey";
+	public static final String text1Key = "titlekey";
+	public static final String text2Key = "userIdKey";
+	public static final String text3Key = "employerkey";
+	public static final String text5Key = "jobstatuskey";
+	public static final String text6Key = "appstatuskey";
+	public static final String text7key = "resumekey";
     
 	public boolean getJobmine() {
 
@@ -120,10 +122,13 @@ public class MainActivity extends SherlockActivity {
 			stream = new ByteArrayOutputStream();
 			resp.getEntity().writeTo(stream);
 			Document table = Jsoup.parse(new String(stream.toByteArray()));
-		
+			
 			post = new HttpPost(
 					"https://jobmine.ccol.uwaterloo.ca/psp/SS/EMPLOYEE/WORK/?cmd=logout");
 			client.execute(post);
+			
+			userIDvalue = table.getElementById("UW_CO_STUDENT_UW_CO_STU_ID").text();
+
 			Elements element = table.getElementsByTag("table");
 			if(element.size()<6){
 				return false;
@@ -211,6 +216,7 @@ public class MainActivity extends SherlockActivity {
 		protected void onPostExecute(Boolean param) {
 			dialog.dismiss();
 			if(param){
+				editor.putString(text2Key, userIDvalue);
 				setContent();
 			}
 			else{
@@ -264,12 +270,12 @@ public class MainActivity extends SherlockActivity {
 					public boolean onTouch(View v, MotionEvent event) {
 						if(event.getAction() == MotionEvent.ACTION_UP){
 							Intent intent = new Intent(MainActivity.this, JobDetails.class);
-							intent.putExtra(titleKey, title.get(position));
-							intent.putExtra(idKey, id.get(position));
-							intent.putExtra(employerKey, emplyer.get(position));
-							intent.putExtra(jobStatusKey, jobStatus.get(position));
-							intent.putExtra(appStatusKey, appStatus.get(position));
-							intent.putExtra(resumeKey, resumes.get(position));
+							intent.putExtra(text1Key, title.get(position));
+							intent.putExtra(text2Key, id.get(position));
+							intent.putExtra(text3Key, emplyer.get(position));
+							intent.putExtra(text5Key, jobStatus.get(position));
+							intent.putExtra(text6Key, appStatus.get(position));
+							intent.putExtra(text7key, resumes.get(position)+" Applicants");
 							startActivity(intent);
 						}
 						return true;
@@ -377,6 +383,7 @@ public class MainActivity extends SherlockActivity {
 				try {
 					userName = settings.getString(userNameKey, "");
 					pwd = settings.getString(pwdKey, "");
+					userIDvalue = settings.getString(text2Key, "");
 					new getData(MainActivity.this).execute(new Void[3]);
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
@@ -443,6 +450,9 @@ public class MainActivity extends SherlockActivity {
 	    	linearLayout1.removeAllViews();
 	    	createDialog();
 	    	break;
+	    case R.id.interviews:
+	    	Intent intent = new Intent(MainActivity.this, InterviewList.class);
+	    	startActivity(intent);
 	    default:
 	    	break;
 	            
