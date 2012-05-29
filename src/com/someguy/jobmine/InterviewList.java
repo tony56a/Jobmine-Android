@@ -26,6 +26,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.DialogInterface.OnDismissListener;
+import android.content.res.Configuration;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Html;
@@ -48,12 +49,31 @@ public class InterviewList extends SherlockActivity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.interview_list);
+		
+		emplyNameList = new ArrayList<String>();
+		titleList = new ArrayList<String>();
+		dateList = new ArrayList<String>();
+		lengthList = new ArrayList<String>();
+		timeList = new ArrayList<String>();
+		interviewerList = new ArrayList<String>();
+		idList = new ArrayList<String>();
+		
 		getSupportActionBar().setTitle("Interviews");
 		getSupportActionBar().setDisplayShowHomeEnabled(false);
 		getSupportActionBar().setDisplayShowTitleEnabled(true);
 		settings = new EncryptedSharedPreferences( 
 			    this, this.getSharedPreferences(MainActivity.PREFS_NAME, Context.MODE_PRIVATE) );
-		new getInterviewTask(InterviewList.this).execute(new Void[3]);
+	}
+	
+	@Override
+	public void onResume(){
+		super.onResume();
+		if(emplyNameList.isEmpty()){
+			new getInterviewTask(InterviewList.this).execute(new Void[3]);
+		}
+		else{
+			updateUI();
+		}
 	}
 
 	public class getInterviewTask extends AsyncTask<Void, Void, Boolean> {
@@ -137,11 +157,11 @@ private boolean getInterviews() {
 			Element table = webpage.getElementById("UW_CO_STUD_INTV$scroll$0");
 			Elements tableElements = table.getAllElements();
 			for(int i = 0; i<tableElements.size(); i++){
-				if (tableElements.get(i).id().contains("UW_CO_STUD_INTV_UW_CO_JOB_ID")
+				if ((tableElements.get(i).id().contains("UW_CO_STUD_INTV_UW_CO_JOB_ID") || tableElements.get(i).id().contains("UW_CO_GRP_STU_V_UW_CO_JOB_ID")  )
 						&& tableElements.get(i).hasText() && !(tableElements.get(i).text().equals(tableElements.get(i+1).text()))) {
 					idList.add(tableElements.get(i).text());
 				}
-				if (tableElements.get(i).id().contains("UW_CO_STUD_INTV_UW_CO_PARENT_NAME")
+				if ((tableElements.get(i).id().contains("UW_CO_STUD_INTV_UW_CO_PARENT_NAME") || tableElements.get(i).id().contains("UW_CO_GRP_STU_V_UW_CO_PARENT_NAME"))
 						&& tableElements.get(i).hasText() && !(tableElements.get(i).text().equals(tableElements.get(i+1).text()))) {
 					emplyNameList.add(tableElements.get(i).text());
 				}
@@ -149,18 +169,18 @@ private boolean getInterviews() {
 						&& tableElements.get(i).hasText() && !(tableElements.get(i).text().equals(tableElements.get(i+1).text()))) {
 					titleList.add(tableElements.get(i).text());
 				}
-				if (tableElements.get(i).id().contains("UW_CO_STUD_INTV_UW_CO_CHAR_DATE")
+				if ((tableElements.get(i).id().contains("UW_CO_STUD_INTV_UW_CO_CHAR_DATE") || tableElements.get(i).id().contains("UW_CO_GRP_STU_V_UW_CO_CHAR_DATE"))
 						 && tableElements.get(i).hasText() && !(tableElements.get(i).text().equals(tableElements.get(i+1).text()))) {
 					dateList.add(tableElements.get(i).text());
 				}
-				if (tableElements.get(i).id().contains("UW_CO_STUD_INTV_UW_CO_CHAR_STIME") && !(tableElements.get(i).text().equals(tableElements.get(i+1).text()))) {
+				if ((tableElements.get(i).id().contains("UW_CO_STUD_INTV_UW_CO_CHAR_STIME") || tableElements.get(i).id().contains("UW_CO_GRP_STU_V_UW_CO_CHAR_STIME")) && !(tableElements.get(i).text().equals(tableElements.get(i+1).text()))) {
 					timeList.add(tableElements.get(i).text());
 				}
-				if (tableElements.get(i).id().contains("UW_CO_STUD_INTV_UW_CO_INTV_DUR")
+				if ((tableElements.get(i).id().contains("UW_CO_STUD_INTV_UW_CO_INTV_DUR") || tableElements.get(i).id().contains("UW_CO_GRP_STU_V_UW_CO_CHAR_ETIME"))
 						 && tableElements.get(i).hasText() && !(tableElements.get(i).text().equals(tableElements.get(i+1).text()))) {
 					lengthList.add(tableElements.get(i).text());
 				}
-				if (tableElements.get(i).id().contains("UW_CO_STUD_INTV_UW_CO_DESCR_50")
+				if ((tableElements.get(i).id().contains("UW_CO_STUD_INTV_UW_CO_DESCR_50") || tableElements.get(i).id().contains("UW_CO_GRP_STU_V_UW_CO_SCHED_DESCR"))
 						 && tableElements.get(i).hasText() && !(tableElements.get(i).text().equals(tableElements.get(i+1).text()))) {
 					interviewerList.add(tableElements.get(i).text());
 				}
@@ -185,7 +205,11 @@ public void updateUI() {
 	LinearLayout list = (LinearLayout) findViewById(R.id.interviewlist);
 	LayoutInflater li = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
 	list.removeAllViews();
-
+	
+	if(emplyNameList.isEmpty()){
+		return;
+	}
+try{
 	for ( int i = 0; i < emplyNameList.size(); i++) {
 
 		View v = li.inflate(R.layout.jobentry,null);
@@ -226,6 +250,17 @@ public void updateUI() {
 
 		list.addView(v);
 	}
+}
+catch(IndexOutOfBoundsException e){
+	list.removeAllViews();
+	return;
+}
 
+}
+
+@Override
+public void onConfigurationChanged(Configuration newConfig) {
+  super.onConfigurationChanged(newConfig);
+  setContentView(R.layout.interview_list);
 }
 }

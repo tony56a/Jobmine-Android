@@ -1,17 +1,7 @@
 package com.someguy.jobmine;
 
-import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.CookieHandler;
-import java.net.CookieManager;
-import java.net.HttpCookie;
-import java.net.HttpURLConnection;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.http.HttpResponse;
@@ -29,9 +19,10 @@ import android.app.ProgressDialog;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.DialogInterface.OnDismissListener;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.DialogInterface.OnDismissListener;
+import android.content.res.Configuration;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Html;
@@ -39,8 +30,6 @@ import android.text.Spanned;
 import android.text.util.Linkify;
 import android.view.View;
 import android.view.View.OnClickListener;
-
-import android.webkit.WebView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -199,5 +188,9 @@ public class JobDetails extends SherlockActivity {
 		new getJobInfo(JobDetails.this).execute(new Void[3]);
 	}
 
-	
+	@Override
+	public void onConfigurationChanged(Configuration newConfig) {
+	  super.onConfigurationChanged(newConfig);
+	  setContentView(R.layout.job_details);
+	}
 }

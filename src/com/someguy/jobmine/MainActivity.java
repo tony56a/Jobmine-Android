@@ -47,6 +47,7 @@ import android.content.DialogInterface.OnClickListener;
 import android.content.DialogInterface.OnDismissListener;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.content.res.Configuration;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -156,13 +157,10 @@ public class MainActivity extends SherlockActivity {
 				if (c.get(i).id().contains("UW_CO_JOBSTATVW_UW_CO_JOB_STATUS")
 						&& (c.get(i).id().contains("$$")) && c.get(i).hasText()) {
 					jobStatus.add(c.get(i).ownText());
-					if(c.get(i).ownText().contains("Ranking Completed")){
-						appStatus.add(" ");
-						appStatus.add(" ");
-					}
+			
 				}
 				if (c.get(i).id().contains("UW_CO_APPSTATVW_UW_CO_APPL_STATUS")
-						&& (c.get(i).id().contains("$$")) && c.get(i).hasText()) {
+						&& (c.get(i).id().contains("$$"))) {
 					appStatus.add(c.get(i).ownText());
 				}
 				if (c.get(i).id().contains("UW_CO_JOBAPP_CT_UW_CO_MAX_RESUMES")
@@ -317,6 +315,25 @@ public class MainActivity extends SherlockActivity {
 		displayNotSelected = settings.getBoolean(notSelectedKey, true);
 		displayRanked = settings.getBoolean(rankedKey, true);
 		
+		if (title.size() > 0) {
+			setContent();
+		} else {
+			if(settings.contains(userNameKey) && settings.contains(pwdKey)){
+				try {
+					userName = settings.getString(userNameKey, "");
+					pwd = settings.getString(pwdKey, "");
+					userIDvalue = settings.getString(text2Key, "");
+					new getData(MainActivity.this).execute(new Void[3]);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			else{
+				createDialog();
+			}
+		}
+		
 	}
 
 
@@ -376,24 +393,7 @@ public class MainActivity extends SherlockActivity {
 	@Override
 	public void onResume() {
 		super.onResume();
-		if (title.size() > 0) {
-			setContent();
-		} else {
-			if(settings.contains(userNameKey) && settings.contains(pwdKey)){
-				try {
-					userName = settings.getString(userNameKey, "");
-					pwd = settings.getString(pwdKey, "");
-					userIDvalue = settings.getString(text2Key, "");
-					new getData(MainActivity.this).execute(new Void[3]);
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-			else{
-				createDialog();
-			}
-		}
+		
 	}
 
 	@Override
@@ -460,5 +460,28 @@ public class MainActivity extends SherlockActivity {
 	    return super.onOptionsItemSelected(item);
 	}
 	
-	
+	@Override
+	public void onConfigurationChanged(Configuration newConfig) {
+	  super.onConfigurationChanged(newConfig);
+	  setContentView(R.layout.main);
+	  
+	  if (title.size() > 0) {
+			setContent();
+		} else {
+			if(settings.contains(userNameKey) && settings.contains(pwdKey)){
+				try {
+					userName = settings.getString(userNameKey, "");
+					pwd = settings.getString(pwdKey, "");
+					userIDvalue = settings.getString(text2Key, "");
+					new getData(MainActivity.this).execute(new Void[3]);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			else{
+				createDialog();
+			}
+		}
+	}
 }

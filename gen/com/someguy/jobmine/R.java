@@ -884,11 +884,12 @@ containing a value of this type.
         public static final int dialog=0x7f030014;
         public static final int filter_dialog=0x7f030015;
         public static final int interview_list=0x7f030016;
-        public static final int job_details=0x7f030017;
-        public static final int jobentry=0x7f030018;
-        public static final int main=0x7f030019;
-        public static final int sherlock_spinner_dropdown_item=0x7f03001a;
-        public static final int sherlock_spinner_item=0x7f03001b;
+        public static final int interview_select_webview=0x7f030017;
+        public static final int job_details=0x7f030018;
+        public static final int jobentry=0x7f030019;
+        public static final int main=0x7f03001a;
+        public static final int sherlock_spinner_dropdown_item=0x7f03001b;
+        public static final int sherlock_spinner_item=0x7f03001c;
     }
     public static final class menu {
         public static final int options=0x7f0b0000;
